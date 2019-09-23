@@ -31,15 +31,17 @@
  
 6) Clone the repository 
           
-           - https://github.com/deep6000/Embedded-Interface-Design
+          - https://github.com/deep6000/Embedded-Interface-Design
 7) Edit the th_display file 
  
- The databse is set to login using username and password for our raspberry pi.You should change the username 
-           - sudo vi th_display.py
-           - 
+          The database is set to login using username and password for our raspberry pi.
+          You should change the username and passord to above set username and password
+          - sudo vi th_display.py
+          - change the values in the variables DB_USERNAME, DB_PASSWORD to ypur mysql username and password
+          
  
  # References
-          [1]https://tableplus.com/blog/2018/09/mariadb-how-to-create-new-user-and-grant-privileges.html
+          [1]https://tableplus.com/blog/2018/09/mariadb-how-to-create-new-user-and-grant-privileges.html: Create New User
           [2]
           [3]
           [4]
