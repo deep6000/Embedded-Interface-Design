@@ -1,7 +1,7 @@
 # Embedded-Interface-Design
 
-#Project-1 - Temperature - Humifity Sensor UI and Database
+# Project-1 - Temperature - Humifity Sensor UI and Database
 
-#Team Name
+# Team Name
           - Deepesh Sonigra
           - Madhumitha Tolakanhalli
