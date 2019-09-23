@@ -4,8 +4,14 @@
 
 ### Team Members
           - Deepesh Sonigra
-          - Madhumitha Tolakanahalli
+          - Madhumitha Tolakanahalli Pradeep
 
+## Description
+          - The GUI displays temperature and humidity on the status line that is fetched from the sensor 15s with the timestamp
+          - The temperature and humidity at the current instant can be retreived using the REFRESH button.
+          - A graph of 10 previous values of Temperature and Humidity can be generated on clicking the corresponding Graph Button
+          - The C/F Button can be used to change the entire application display from Celcius to Farenheit
+          
 ## Installation Instructions 
 1) Python Installation
 
