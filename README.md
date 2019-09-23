@@ -6,7 +6,6 @@
           - Deepesh Sonigra
           - Madhumitha Tolakanahalli
 
-
 ## Installation Instructions 
 1) Adafruit DHT22 Sensor Installation[3]
 
@@ -57,8 +56,7 @@
           - Retention of threshold values of temperature on change of display from Celcius to Farenheit and vice versa 
           - Macros for database name table names and mysql user login details to change names according to user preferences
           - Error handling provided where it creates database and tables if not exists.
-          
-          - 
+        
  ## References
           [1]https://tableplus.com/blog/2018/09/mariadb-how-to-create-new-user-and-grant-privileges.html :Create New User
           [2]https://yapayzekalabs.blogspot.com/2018/11/pyqt5-gui-qt-designer-matplotlib.html :Pyqt5 - matplotlib 
