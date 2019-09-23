@@ -7,42 +7,47 @@
           - Madhumitha Tolakanahalli
 
 ## Installation Instructions 
-1) Adafruit DHT22 Sensor Installation[3]
+1) Python Installation
 
-          -sudo python3 -m pip install --upgrade pip setuptools wheel
+          -sudo apt-get update
+          -sudo apt-get upgrade
+          -sudo apt-get install python3-dev python3-pip
+          
+2) Adafruit DHT22 Sensor Library and Integration[3]
+         
           -sudo pip3 install Adafruit_DHT
            
 
-2) Install Pyqt5
+3) Install Pyqt5
 
           -sudo apt-get install qt5-default pyqt5-dev pyqt5-dev-tools
-3) Install Qt
+4) Install Qt
 
           -sudo apt-get install qttools5-dev-tools
-4) Install Database Maria DB
+5) Install Database Maria DB
 
           -sudo apt-get install mariadb-server
           -sudo apt-get install libmariadbclient-dev
           -sudo apt-get install python3-mysqldb
           -sudo apt-get install mariadb-client
-5) Enable Secure Login to the database
+6) Enable Secure Login to the database
 
           -sudo mysql_secure_installation
           **set root password if not set and select yes for all options for more security
-6) Create USER for database 
+7) Create USER for database 
 
           - https://tableplus.com/blog/2018/09/mariadb-how-to-create-new-user-and-grant-privileges.html
  
-7) Clone the repository 
+8) Clone the repository 
           
           - https://github.com/deep6000/Embedded-Interface-Design
           
-8) Change the MySQL connection parameters
+9) Change the MySQL connection parameters
 
           You should change the username and passord for the database to above set username and password
           - sudo vi th_display.py
           - Change the parameters under MySQL parameters "DB_USERNAME, DB_PASSWORD" to your mysql username and password
- 9) Run the executible
+ 10) Run the executible
          
          -sudo python3 th_display.py    or
          ./th_display.py
