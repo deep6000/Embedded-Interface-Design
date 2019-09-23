@@ -15,6 +15,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import (NavigationToolbar2QT as NavigationToolbar)
 from database import db_sql
 
+__author__ = "Madhumitha Tolakanhalli , Deepesh Sonigra"
+__copyright__ = "Copyright 2019, Temperature -Humidity UI & database"
+__email__ = "mato2277@colorado.edu , deso6761@colorado.edu"
+__version__ = 1.0
+__status__ = "Prototype"
+
+
+# Sensor Type 
 DHT_SENSOR = Adafruit_DHT.DHT22
 DHT_PIN = 4
 count = 0
@@ -42,6 +50,7 @@ dbase = MySQLdb.connect(
 		)
 cursor = dbase.cursor()
 
+#class Display
 class display(QDialog):
 	def __init__(self):
 		super(display, self).__init__()
@@ -63,7 +72,8 @@ class display(QDialog):
 		#initialize init values for temperature and humidity threshold
 		self.text_alarm_t.setText(str(th_temperature_c))
 		self.text_alarm_h.setText(str(th_humidity))
-			
+
+# toggle betwween c & F			
 	def toggle_temperature_unit(self):
 		global is_farenheit, th_temperature_c, th_temperature_f
 		is_farenheit ^= 1
@@ -76,6 +86,7 @@ class display(QDialog):
 			
 		self.refresh_display()
 		
+#set temperature threshold
 	def set_temperature_threshold(self):
 		global th_temperature_c, th_temperature_f
 		
@@ -91,7 +102,8 @@ class display(QDialog):
 	def set_humidity_threshold(self):
 		global th_humidity
 		th_humidity = float(self.text_alarm_h.toPlainText())
-		
+
+# Sensor read values 		
 	def sensor_read(self):
 	# read sensor values
 		global th_temperature_f, th_temperature_c, th_humidity
@@ -117,14 +129,16 @@ class display(QDialog):
 		self.text_alert.setText( str(self.text_t) + str(self.text_h))
 		
 		return self.humidity, self.temperature, self.time
-		
+
+# timer callback function
 	def timer_callback(self):
 		global count 
 		count = count + 1
 		if count > 30:
 			self.terminate()
 		self.status_line()
-		
+
+# refresh display
 	def refresh_display(self):
 		humidity, temperature, time = self.sensor_read()
 		self.lcd_timestamp.display(str(time))
@@ -161,7 +175,8 @@ class display(QDialog):
 			self.text_statusline.setText('['+ str(time)+ ']'+ \
 				'\t\tSensor Status: Connected' + '\t\tTemperature: {0:0.1f} C'.format(temperature) \
 				+ '\t\tHumidity: {0:0.1f} %'.format(humidity))
-		
+
+#status line function		
 	def status_line(self):
 		# read sensor values and return string to dsiplay on the status line
 		humidity, temperature, time = self.sensor_read()
@@ -184,11 +199,13 @@ class display(QDialog):
 			self.text_statusline.setText('['+ str(time)+ ']'+ \
 				'\t\tSensor Status: Connected' + '\t\tTemperature: {0:0.1f} C'.format(temperature) \
 				+ '\t\tHumidity: {0:0.1f} %'.format(humidity))
-				
+
+# Celcuis to farenheit conversion
 	def Celcuis2Farenheit(self, db_t):
 		db_tf = [((db_t[i]*(9/5)) + 32) for i in range(len(db_t))]
 		return db_tf
-    
+
+# Temperature graph function
 	def temperature_graph(self):
 	# display a graph of past 10 temperature values
 		db = database.db_sql()
@@ -203,6 +220,7 @@ class display(QDialog):
 		self.matplot_widget.canvas.axes.legend('Readings', 'Temperature') 
 		self.matplot_widget.canvas.draw()
 		
+# humidity graph function		
 	def humidity_graph(self):
 	# display a graph of past 10 humidity values
 		x = np.linspace(0, 1, 10)
@@ -217,7 +235,7 @@ class display(QDialog):
 		sys.exit(app.exec_())
 				
 if __name__ == "__main__":
-	###### MAIN CODE ###########
+	######## MAIN CODE ###########
 	app=QApplication(sys.argv)
 	widget=display()
 	#create database 
@@ -229,6 +247,7 @@ if __name__ == "__main__":
 	db_obj.create_temp_tb(cursor)
 	#create Humidity table
 	db_obj.create_humidity_tb(cursor)
+	# commit the changes
 	db_obj.commit_db(dbase)
 	widget.show()
 	widget.terminate()
