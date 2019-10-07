@@ -1,0 +1,436 @@
+<!doctype html>
+<html>
+  <head>
+    <title>EID Project 02</title>
+    <meta charset="utf-8" />
+    <style type="text/css">
+      body {
+        text-align: center;
+        min-width: 500px;
+      }
+      div {
+        margin-top: 1em;
+      }
+      label {
+        /* To make sure that all labels have the same size and are properly aligned */
+        display: inline-block;
+        width: 140px;
+        text-align: right;
+      }
+      textarea {
+        /* To properly align multiline text fields with their labels */
+        vertical-align: top;
+        /* To give enough room to type some text */
+      }
+      .button {
+        /* To position the buttons to the same position of the text fields */
+        padding-left: 90px;
+        /* same size as the label elements */
+      }
+      button {
+        /* This extra margin represent roughly the same space as the space between the labels and their text fields */
+        /*margin-left: .6em;*/
+      }
+      table, th, td {
+        text-align: center;
+        border: 1px solid black;
+        border-collapse: collapse;
+      }
+      #terminal{
+        position: relative;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+      }
+      #terminal-content {
+        position: absolute;
+        bottom: 0;left: 0;
+      }
+      #terminal, #terminal * {
+        background: rgba(40,40,100, 0.25);
+      }
+      #terminal h1 {
+        margin-bottom: auto;
+      }
+    </style>
+    <script src="http://code.jquery.com/jquery.min.js"></script>
+    <script>
+
+      // log function
+      log = function(data){
+        $("div#terminal").prepend("</br>" +data);
+        console.log(data);
+      };
+ 
+      $(document).ready(function () {
+        $("div#display_curr_val").hide();
+        $("div#network_resp").hide();
+        $("#networkresp").hide();
+
+           
+      var ws;var wn;
+      var netresp_db;
+      var netresp_tor;
+      var curr_db = 0;
+      var curr_tor = 0;
+      var itemsArray_h = 0;
+      var hum_graph = 0;
+      
+        $("#connect").click(function(evt) {
+          evt.preventDefault();
+ 
+          var host = $("#host").val();
+          var port = $("#port").val();
+          var uri = $("#uri").val();
+ 
+          var host_n = $("#host_n").val();
+          var port_n = $("#port_n").val();
+          var uri_n = $("#uri_n").val();
+ 
+ 
+          // create node.jswebsocket instance
+          wn = new WebSocket("ws://" + host_n + ":" + port_n);
+          
+          wn.onmessage = function(evt) {
+            if (netresp_db == 1) {
+              netresp_db = 0;
+              var itemsArray = JSON.parse(evt.data);
+              var table_set = [["SerialNo" , "Timestamp" , "Humidity"],[itemsArray[0].serialNo,itemsArray[0].timestamp, itemsArray[0].value],
+                                                                            [itemsArray[1].serialNo,itemsArray[1].timestamp, itemsArray[1].value],
+                                                                            [itemsArray[2].serialNo,itemsArray[2].timestamp, itemsArray[2].value],
+                                                                            [itemsArray[3].serialNo,itemsArray[3].timestamp, itemsArray[3].value],
+                                                                            [itemsArray[4].serialNo,itemsArray[4].timestamp, itemsArray[4].value],
+                                                                            [itemsArray[5].serialNo,itemsArray[5].timestamp, itemsArray[5].value],
+                                                                            [itemsArray[6].serialNo,itemsArray[6].timestamp, itemsArray[6].value],
+                                                                            [itemsArray[7].serialNo,itemsArray[7].timestamp, itemsArray[7].value],
+                                                                            [itemsArray[8].serialNo,itemsArray[8].timestamp, itemsArray[8].value],
+                                                                            [itemsArray[9].serialNo,itemsArray[9].timestamp, itemsArray[9].value]],
+                                                                            
+                table = document.getElementById("nodejs");
+                var row, cell;
+                for(var i=0; i < table_set.length ; i++){
+                  row = table.insertRow(table.length);
+                  for(var j=0; j < table_set[i].length; j++){
+                     cell = row.insertCell(j);
+                     cell.innerHTML = table_set[i][j];
+                  }
+                }
+                  stop_n = performance.now();
+                  document.getElementById("start_n").value = "Start Time " + (start) + " ms";
+                  document.getElementById("stop_n").value = "Stop Time " + (stop_n) + " ms";
+                  document.getElementById("duration_n").value = "Processing Time " + (stop_n - start) + " ms";
+            }
+            
+            if (curr_db > 0) {
+              if (curr_db == 2) {
+                  curr_db = curr_db - 1;
+                  var itemsArray = JSON.stringify(evt.data);
+                  var data = itemsArray.split(",");
+                  var hum = itemsArray.split(":");
+                  var ts = hum[2].split("\\");
+                  var timestamp = ts[0].split(",");
+                  var h = hum[3].split("}");
+                  $("#humidity_db").val(h[0] + "%");
+                  $("#time_db").val("[" + timestamp[0] + "]");
+              }
+              else{
+                  var is_Fareneit = $('input[name=temp]:checked').val();
+                  curr_db = curr_db - 1;
+                  var itemsArray = JSON.stringify(evt.data);
+                  var data = itemsArray.split(",");
+                  var temp = itemsArray.split(":");
+                  log(temp);
+                  log(temp[3]);
+                  var t = temp[3].split("}");
+                  if (is_Fareneit == 1) {
+                    unit = "F";
+                    temperature = parseFloat(t[0]);
+                    temperature = ((temperature * 9.0)/5.0)+32;
+                    $("#temperature_db").val(temperature.toFixed(2) + unit);
+                  }
+                  else {
+                    unit = "C";
+                    $("#temperature_db").val(t[0] + unit);
+                  }
+              }
+            }
+            if (hum_graph == 1) {
+                alert("la");
+                hum_graph = 0;
+                var itemsArray_graph = JSON.parse(evt.data);
+                log(itemsArray_graph[0].value);
+                window_h(itemsArray_graph);
+            }
+              
+          };
+             
+             
+          // Close Node.js Websocket callback
+          wn.onclose = function(evt) {
+            log("---[Node.js Websocket]Connection Closed---");
+            alert("Refresh the page and try again!");
+            $("#host_n").css("background", "#F6754F"); 
+            $("#port_n").css("background", "#F6754F"); 
+            $("#uri_n").css("background",  "#F6754F");
+ 
+            };
+ 
+          // Open Node.js Websocket callback
+          wn.onopen = function(evt) { 
+            $("#host_n").css("background", "#4FF67A"); 
+            $("#port_n").css("background", "#4FF67A"); 
+            $("#uri_n").css("background", "#4FF67A");
+            log("---[Node.js Websocket]Connection Opened---");
+          };  
+        
+          // create tornado websocket instance
+          ws = new WebSocket("ws://" + host + ":" + port + uri);
+        
+          ws.onmessage = function(evt) {
+            $("div#connection_details").hide();
+            var data = evt.data.split("+");
+            // Current Sensor Values
+            if (data[0] == "CurrSensVal") {
+              var is_Fareneit = $('input[name=temp]:checked').val();
+              var temperature = data[3];
+              var unit;
+              log("Message Received: " + evt.data);
+              $("#time").val("[" + data[1] + "]");
+              $("#humidity").val(data[3] + "%");
+              
+              if (is_Fareneit == 1) {
+                unit = "F";
+                temperature = parseFloat(data[2]);
+                temperature = ((temperature * 9.0)/5.0)+32;
+                $("#temperature").val(temperature.toFixed(2) + unit);
+              }
+              else {
+                unit = "C";
+                $("#temperature").val(data[2] + unit);
+              }
+            }
+            else {
+              if(netresp_tor == 1) {
+                netresp_tor = 0;
+                $("div#network_resp").show();
+                itemsArray_h = JSON.parse(evt.data);
+                var table_set = [["SerialNo" , "TS" , "Humidity"],[itemsArray_h[0].value,itemsArray_h[0].timestamp, itemsArray_h[0].serialNo],
+                                                                            [itemsArray_h[1].value,itemsArray_h[1].timestamp, itemsArray_h[1].serialNo],
+                                                                            [itemsArray_h[2].value,itemsArray_h[2].timestamp, itemsArray_h[2].serialNo],
+                                                                            [itemsArray_h[3].value,itemsArray_h[3].timestamp, itemsArray_h[3].serialNo],
+                                                                            [itemsArray_h[4].value,itemsArray_h[4].timestamp, itemsArray_h[4].serialNo],
+                                                                            [itemsArray_h[5].value,itemsArray_h[5].timestamp, itemsArray_h[5].serialNo],
+                                                                            [itemsArray_h[6].value,itemsArray_h[6].timestamp, itemsArray_h[6].serialNo],
+                                                                            [itemsArray_h[7].value,itemsArray_h[7].timestamp, itemsArray_h[7].serialNo],
+                                                                            [itemsArray_h[8].value,itemsArray_h[8].timestamp, itemsArray_h[8].serialNo],
+                                                                            [itemsArray_h[9].value,itemsArray_h[9].timestamp, itemsArray_h[9].serialNo]],
+                                                                            
+                table = document.getElementById("tornado");
+                var row, cell;
+                for(var i=0; i < table_set.length ; i++){
+                  row = table.insertRow(table.length);
+                  for(var j=0; j < table_set[i].length; j++){
+                     cell = row.insertCell(j);
+                     cell.innerHTML = table_set[i][j];
+                  }
+               }
+                  table_ps = document.getElementById("time_tornado");
+                  stop_t = performance.now();
+                  document.getElementById("start_t").value = "Start Time " + (start) + " ms";
+                  document.getElementById("stop_t").value = "Stop Time " + (stop_t) + " ms";
+                  document.getElementById("duration_t").value = "Processing Time " + (stop_t - start) + " ms";
+            }
+              
+          }
+             
+            };
+ 
+          // Close Tornado Websocket callback
+          ws.onclose = function(evt) {
+            log("---[Torndao Websocket]Connection Closed---");
+            alert("Refresh the page and try again!");
+            $("#host").css("background", "#F6754F"); 
+            $("#port").css("background", "#F6754F"); 
+            $("#uri").css("background",  "#F6754F");
+            };
+ 
+          // Open Tornado Websocket callback
+          ws.onopen = function(evt) { 
+            $("#host").css("background", "#4FF67A"); 
+            $("#port").css("background", "#4FF67A"); 
+            $("#uri").css("background", "#4FF67A");
+            $("div#connection_details").delay(2000).fadeOut(1000);
+            $("div#display_curr_val").show();
+            $("#networkresp").show();
+            log("---[Torndao Websocket]Connection Opened---");
+          };
+        });
+ 
+        // Button to retreive current sensor values
+        $("#currsensval").click(function(evt) {
+          ws.send("CurrSensVal");
+        });
+        
+        // Button to retreive current database values
+        $("#currdbval").click(function(evt) {
+          curr_db = 2;
+          wn.send("CurrDBVal");
+        });
+        
+        // Radio button to switch display between C and F
+         $('input:radio').change(function() {
+           
+           ws.send("CurrSensVal");
+           wn.send("CurrDBVal");
+           curr_db = 2;
+        });
+        
+        // Check network responsiveness
+        $("#networkresp").click(function(evt) {
+          netresp_db = 1;
+          netresp_tor = 1;
+          ws.send("TorMySQL");
+          wn.send("TableNodejs");
+          $("div#network_resp").show();
+          start = performance.now();
+          });
+          
+        // Button to retreive current database values
+        $("#humgraph").click(function(evt) {
+          alert("humn");
+          hum_graph = 1;
+          wn.send("HumGraph");
+        });
+        
+});
+
+window_h = function(humid_pts) {
+
+   chart = new CanvasJS.Chart("humidity_graph", {
+      animationEnabled: true,
+      theme: "light2",
+      title:{
+        text: "Humidity"
+      },
+      axisY:{
+          includeZero: false
+      },
+      data: [{        
+        type: "line",       
+        dataPoints: [
+          { y: humid_pts[9].value},
+          { y: humid_pts[8].value},
+          { y: humid_pts[7].value},
+          { y: humid_pts[6].value},
+          { y: humid_pts[5].value},
+          { y: humid_pts[4].value},
+          { y: humid_pts[3].value},
+          { y: humid_pts[2].value},
+          { y: humid_pts[1].value},
+          { y: humid_pts[0].value},
+        ]
+      }]
+  }); 
+  chart.render();
+}        
+ 
+    </script>
+  </head>
+ 
+  <body>
+    <h1>EID: Project 02</h1>
+      <div id="connection_details" >
+      <caption>Tornado Websocket</caption>
+      &emsp;&emsp;&emsp;&emsp; &emsp;&emsp;&emsp;&emsp; &emsp;&emsp;&emsp;&emsp;
+      <caption>&emsp;&emsp;Node.js Websocket</caption><br />
+      <label for="host">IP:  </label>
+      <input type="text" id="host" value="matokor.local" style="background:#F6754F;"/> &emsp;&emsp;
+      
+      <label for="host_n">IP:  </label>
+      <input type="text" id="host_n" value="matokor.local" style="background:#F6754F;"/><br />
+      
+      <label for="port">PORT:</label>
+      <input type="text" id="port" value="8888" style="background:#F6754F;"/> &emsp;&emsp;
+      
+       <label for="port_n">PORT:</label>
+      <input type="text" id="port_n" value="9898" style="background:#F6754F;"/><br />
+      
+      <label for="uri">URI: </label>
+      <input type="text" id="uri" value="/ws" style="background:#F6754F;"/>&emsp;&emsp;
+      
+      <label for="uri_n">URI: </label>
+      <input type="text" id="uri_n" value="/ws" style="background:#F6754F;"/><br /><br />&emsp;&emsp;&emsp;&emsp;&emsp;
+           
+      <button type="button" id="connect">Connect</button><br /><br /><br />
+      </div>
+      
+      <div id="display_curr_val">
+      <button type="button" id="currsensval" style="background:#9EBCB8;">Current Sensor Value</button>&emsp;
+      
+      <output id="time" style="background:#CFFAF4;"></output> 
+      
+      <label for="temperature" style="background:#CFFAF4;"> &emsp; TEMPERATURE: </label> 
+      <output id="temperature" style="background:#CFFAF4;"></output>
+      
+      <label for="humidity" style="background:#CFFAF4;"> &emsp; HUMIDITY: </label>
+      <output id="humidity" style="background:#CFFAF4;"></output><br/><br/>
+      
+      <button type="button" id="currdbval" style="background:#9EBCB8;">Current Database Value</button>&emsp;
+      
+      
+      <output id="time_db" style="background:#CFFAF4;"></output>
+      
+      <label for="temperature" style="background:#CFFAF4;"> &emsp; TEMPERATURE: </label> 
+      <output id="temperature_db" style="background:#CFFAF4;"></output>
+      
+      <label for="humidity" style="background:#CFFAF4;"> &emsp; HUMIDITY: </label>
+      <output id="humidity_db" style="background:#CFFAF4;"></output><br/><br/>
+      
+    <input type="radio" name="temp" value="0"/> C &emsp;
+		<input type="radio" name="temp" value="1"/> F <br/>
+
+      <br /><br /><br /><br />
+      </div>
+      
+    <button type="button" id="networkresp" style="background:#9EBCB8;">Check Network Responsiveness</button>&emsp;
+     
+     <div class ="row">
+      <div class = "column">
+        <button type="button" id="humgraph" style="background:#9EBCB8;">Humidity Graph</button>&emsp;
+        <div id="humidity_graph" style="height: 200px; width=70%;"></div>
+     </div>
+     </div>
+    
+    <div id="network_resp">
+      
+      <table align="left" style="width:40%" id="tornado">
+        <caption>Data from Torando </caption>
+      </table>
+     
+      <table align="right" style="width:40%" id="nodejs">
+        <caption>Data from Node.js</caption>
+      </table>
+      
+    <div id = "Processing_Time">
+        <caption>Processing Time Torando </caption><br /><br />
+        <output type="text" id="start_t"></output><br /><br />
+      <output type="text" id="stop_t"></output><br /><br />
+      <output type="text" id="duration_t"></output><br /><br /><br /><br /><br /><br />
+      </table>  
+     
+        <caption>Processing time Node.js</caption><br /><br />
+      <output type="text" id="start_n"></output><br /><br />
+      <output type="text" id="stop_n"></output><br /><br />
+      <output type="text" id="duration_n"></output><br /><br />
+
+      </div>
+    <br /><br /><br /><br /><br /><br /><br /><br /><br />
+    </div>
+    
+    <div id="terminal">
+      <h3> LOGS</h3>
+        
+    </div>
+
+  </body>
+</html>
