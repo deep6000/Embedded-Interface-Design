@@ -7,7 +7,16 @@
           - Madhumitha Tolakanahalli Pradeep
 
 ## Description
-
+   The Python app is the Temperature Humidity Sensor GUI which displays Temperature and Humidity values.
+   The user interface involves setting up threshold values and getting temperature and humidity graph from the database.
+   This project includes added functionality to the Python app to connect to remote HTML client presenting a Web UI
+   The python app initializes the NodeJS and Tornado Websockets to listen to the HTTP websockets.
+   The WebUI has capability to connect to these websockets based on the IP address and Port number specified.
+   THe web UI contains a connect button to connect to the websockets 
+   Once Connected the Web UI provides functionality to read the sensor values by pressing a button.
+   On button press, the webUI talks to the tornado using sockets and get sensor values through sockets.
+   Similarly a functionality to read Temperature and Humidity values from the database is provided using NodeJS websockets
+   
 
           
 ## Installation Instructions 
@@ -51,11 +60,14 @@
   
  
  ## Project Work
-          - Deepesh Sonigra : 
-          - Madhumitha Tolakanahalli : 
+          - Deepesh Sonigra : NodeJs to Database Connection, NodeJS to HTML Client connection, time performance analysis, HTML
+                              tables for NodeJS and Torando
+          - Madhumitha Tolakanahalli : Tornado and Python app interface, HTML UI Design, Tornado HTML websockets, F-C Display 
+                              conversion, Graph for Temperture and Humidity on Web UI
           
  ## Project Additions
-
+ [1] Allowed User to enter IP address and Port number on the Web UI
+ [2] Added graph functionality on the HTML Web UI
         
  ## References
 [1]https://www.geeksforgeeks.org/how-to-convert-json-data-to-a-html-table-using-javascript-jquery/ (JSON to HTML table)
