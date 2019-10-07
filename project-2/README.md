@@ -68,7 +68,7 @@
  ## Project Additions
  
          - Allowed User to enter IP address and Port number on the Web UI
-         - Added graph functionality on the HTML Web UI
+        
         
  ## References
 [1]https://www.geeksforgeeks.org/how-to-convert-json-data-to-a-html-table-using-javascript-jquery/ (JSON to HTML table)
