@@ -1,6 +1,6 @@
 # Embedded-Interface-Design
 
-## Project 2 - NodeJS and Torando Websockets servers with HTML client
+## Project 2 - NodeJS and Tornado Websockets servers with HTML client
 
 ### Team Members
           - Deepesh Sonigra
