@@ -285,7 +285,7 @@ def message_handler(message):
 		humidity, temperature, time  = th.sensor_read()
 		mutex.release()
 		if humidity is None or temperature is None:
-			return message + str(time) + '+' + "Error + Error"
+			return message + '+' + str(time) + '+' + "Error + Error"
 		return message + '+'+ str(time) + '+' + '{0:0.1f}'.format(temperature) + '+' + '{0:0.1f}'.format(humidity)
 			
 	if message == "TorMySQL":
