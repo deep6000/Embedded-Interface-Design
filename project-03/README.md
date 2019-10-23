@@ -1,75 +1,49 @@
 # Embedded-Interface-Design
 
-## Project 1 - Temperature - Humidity Sensor UI and Database
+## Project 3 - AWS IOT Interface
 
 ### Team Members
           - Deepesh Sonigra
           - Madhumitha Tolakanahalli Pradeep
 
-## Description
-          - The GUI displays temperature and humidity on the status line that is fetched from the sensor 15s with the timestamp
-          - The temperature and humidity at the current instant can be retreived using the REFRESH button.
-          - A graph of 10 previous values of Temperature and Humidity can be generated on clicking the corresponding Graph Button
-          - The C/F Button can be used to change the entire application display from Celcius to Farenheit
+## Description 
+
+The python app sends MQTT push to AWS IOT 3 types of messages- DATA, ALERT , ERRO. We have defined a Lambda rule which triggers a lambda function on AWS IOT receive successful. In Lambda function DATA Type message is further send to AWS SQS to store the value in the Queue. The ALert Type message is send to AWS SNS to send messages/emails to the user as notification. We have an HTML client which reads the data from the SQS queue depending on the demand. We can read a single value of "Temperature , Humidtity and Timestamp" or could read the entire queue based on the button pressed. Reading entire queue displays just 20 latest values from the queue and prints it in a form of table. The Queue length button gives user the capability to know the number of items in the queue at particular time. THe Queue Length also updates itself as soon you read from the Queue. 
           
 ## Installation Instructions 
-1) Python Installation
 
-          -sudo apt-get update
-          -sudo apt-get upgrade
-          -sudo apt-get install python3-dev python3-pip
-          
-2) Adafruit DHT22 Sensor Library and Integration[3]
-         
-          -sudo pip3 install Adafruit_DHT
-           
+1) Follow the instructions to install all dependencies shown the following links
 
-3) Install Pyqt5
-
-          -sudo apt-get install qt5-default pyqt5-dev pyqt5-dev-tools
-4) Install Qt
-
-          -sudo apt-get install qttools5-dev-tools
-5) Install Database Maria DB
-
-          -sudo apt-get install mariadb-server
-          -sudo apt-get install libmariadbclient-dev
-          -sudo apt-get install python3-mysqldb
-          -sudo apt-get install mariadb-client
-6) Enable Secure Login to the database
-
-          -sudo mysql_secure_installation
-          **set root password if not set and select yes for all options for more security
-7) Create USER for database 
-
-          - https://tableplus.com/blog/2018/09/mariadb-how-to-create-new-user-and-grant-privileges.html
+          -https://github.com/deep6000/Embedded-Interface-Design/edit/master/project-1/
+          -https://github.com/deep6000/Embedded-Interface-Design/edit/master/project-2/
  
-8) Clone the repository 
+ 2) AWS Python SDK Installation
+ 
+          -sudo pip3 install AWSIoTPythonSDK
+ 
+ 3) Create an AWS account and Rules to Trigger the Lambda function on MQTT message receive.
           
-          - https://github.com/deep6000/Embedded-Interface-Design
-          
-9) Change the MySQL connection parameters
-
-          You should change the username and passord for the database to above set username and password
-          - sudo vi th_display.py
-          - Change the parameters under MySQL parameters "DB_USERNAME, DB_PASSWORD" to your mysql username and password
- 10) Run the executible
+ 4) Change the MQTT Configuration Credentials 
+         
+ 5) Run the executible
          
          -sudo python3 th_display.py    or
          ./th_display.py
  
  ## Project Work
-          - Deepesh Sonigra : Database Installation,Creation,MySQL code,QT- Database Intergration,Sensor Integration 
-          - Madhumitha Tolakanahalli : QT Environment setup, PYQT5, Matplotlib,Timers, QT- Database Intergration
+          - Deepesh Sonigra : AWS IOT to SQS , Lambda function,Rule for AWS IOT lambda trigger, SQS to HTML
+          - Madhumitha Tolakanahalli : Python app to AWS IOT,SNS rule for Lambda function,Lambda function, AWS IOT to SNS, 
           
  ## Project Additions
-          - A button interface to change the entire display from the Celcius to Farenheit
-          - Retention of threshold values of temperature on change of display from Celcius to Farenheit and vice versa 
-          - Macros for database name table names and mysql user login details to change names according to user preferences
-          - Error handling provided where it creates database and tables if not exists.
+         
+         - Error Handling when sensor not connected sends message alert to user about sensor not connected.
+         - The Queue length button gives the current queue length of the AWS SQS.
+         - On Queue Message read the queue prints out Queue is empty if there is not element to read.
+         - The Queue length autoupdates itself on Queue read be it either single value or whole queue.
         
  ## References
-          [1]https://tableplus.com/blog/2018/09/mariadb-how-to-create-new-user-and-grant-privileges.html :Create New User
-          [2]https://yapayzekalabs.blogspot.com/2018/11/pyqt5-gui-qt-designer-matplotlib.html :Pyqt5 - matplotlib 
-          [3]https://github.com/adafruit/Adafruit_Python_DHT - Sensor github library
-          [4]https://learn.adafruit.com/dht-humidity-sensing-on-raspberry-pi-with-gdocs-logging/wiring : Wiring of the Sensor 
+ [1] https://docs.aws.amazon.com/iot/latest/developerguide/iot-gs.html AWS Starter Guide
+ [2]https://techblog.calvinboey.com/raspberrypi-aws-iot-python/ Streaming sensor data to AWS IOT
+ [3] https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/getting-started-browser.html- Getting Started Browser Script.
+ [4]https://docs.aws.amazon.com/lambda/latest/dg/with-sns-example.html Using Lambda with SNS
+ [5] https://startupnextdoor.com/adding-to-sqs-queue-using-aws-lambda-and-a-serverless-api-endpoint/ Using Lambda with SQS
