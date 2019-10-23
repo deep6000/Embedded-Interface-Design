@@ -1,0 +1,291 @@
+<!doctype html>
+<html>
+  <head>
+    <title>EID Project 03</title>
+    <meta charset="utf-8" />
+    <style type="text/css">
+      body {
+        text-align: center;
+        min-width: 500px;
+      }
+      div {
+        margin-top: 1em;
+      }
+      label {
+        /* To make sure that all labels have the same size and are properly aligned */
+        display: inline-block;
+        width: 140px;
+        text-align: right;
+      }
+      textarea {
+        /* To properly align multiline text fields with their labels */
+        vertical-align: top;
+        /* To give enough room to type some text */
+      }
+      .button {
+        /* To position the buttons to the same position of the text fields */
+        padding-left: 90px;
+        /* same size as the label elements */
+      }
+      button {
+        /* This extra margin represent roughly the same space as the space between the labels and their text fields */
+        /*margin-left: .6em;*/
+      }
+      table, th, td {
+        text-align: center;
+        border: 1px solid black;
+        border-collapse: collapse;
+      }
+      #terminal{
+        position: relative;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+      }
+      #terminal-content {
+        position: absolute;
+        bottom: 0;left: 0;
+      }
+      #terminal, #terminal * {
+        background: rgba(40,40,100, 0.25);
+      }
+      #terminal h1 {
+        margin-bottom: auto;
+      }
+    </style>
+	  
+    <script src="http://code.jquery.com/jquery.min.js"></script>
+	<script src="https://sdk.amazonaws.com/js/aws-sdk-2.554.0.min.js"></script>
+    <script>
+		AWS.config.region = 'us-east-1';
+		AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+		IdentityPoolId: 'us-east-1:656e8822-6f47-48be-9197-980e2e739e0d',
+		});
+		var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
+		var table_flag = 0;
+		var queueurl= "https://sqs.us-east-1.amazonaws.com/750237606151/thatpithingqueue";
+		var exit_function;
+		// log function
+		log = function(data){
+			$("div#terminal").prepend("</br>" +data);
+			console.log(data);
+		};
+	 
+		$(document).ready(function () {
+			$("div#SQS_Table").hide();
+		  
+			
+			// Radio button to switch display between C and F
+			$('input:radio').change(function() {
+			   
+			  
+			});
+			
+			// Get Single Value from SQS Queue
+			$("#getsqsval").click(function(evt)
+			{
+				
+				var params = { QueueUrl:queueurl,AttributeNames: ['ApproximateNumberOfMessages']};
+				
+				sqs.receiveMessage(params, function(err, data) {
+				if (err) console.log(err, err.stack);
+				else {
+				
+						var length = data.Messages.length;
+						if(length === 0)
+							log("Queue is Empty");
+						else{
+							var evtdata = JSON.parse(data.Messages[0].Body);
+							var delparams = { QueueUrl:queueurl,
+										  ReceiptHandle: data.Messages[0].ReceiptHandle };
+							var is_Fareneit = $('input[name=temp]:checked').val();
+							var unit, temperature;
+						
+							$("#humidity").val(evtdata.humidity.toFixed(2)+"%");
+							$("#time").val(evtdata.timestamp);	
+						
+							if (is_Fareneit == 1) {
+								unit = "F";
+								temperature = ((evtdata.temperature.toFixed(2) * 9.0)/5.0)+32;
+								$("#temperature").val(temperature.toFixed(2) + unit);
+							}
+							else {
+								unit = "C";
+								$("#temperature").val(evtdata.temperature.toFixed(2) + unit);
+							}
+						
+							sqs.deleteMessage(delparams, function(err, data) {
+								if (err) console.log("Error in deleting");
+								else console.log("Message deleted");
+						});
+					}
+					sqs.getQueueAttributes(params, function(err, data) {
+					if (err) console.log(err, err.stack);
+					else{
+						queueLength = JSON.parse(data.Attributes.ApproximateNumberOfMessages);
+						$("#sqslen").val(queueLength);
+					}
+					}); 
+				
+				}
+			});
+		});
+
+
+		$("#getsqsallval").click(function(evt)
+		{
+			var MaxQueueLength;
+			var queueLength;
+			var row;
+			
+			var params = { QueueUrl: "https://sqs.us-east-1.amazonaws.com/750237606151/thatpithingqueue",
+						   AttributeNames: ['ApproximateNumberOfMessages']};
+			
+			sqs.getQueueAttributes(params, function(err, data){
+			if (err) console.log(err, err.stack);
+			else{
+				queueLength = JSON.parse(data.Attributes.ApproximateNumberOfMessages);
+				
+				if (queueLength === 0) 
+					log("SQS ALL: Queue is empty");
+				else{
+				
+					
+					$("div#SQS_Table").show();
+					var tableColumn = [["Timestamp", "Temperature", "Humidity"]];
+					table = document.getElementById("sqstable");
+					if( table_flag){
+						table = document.getElementById("sqstable");				
+						for(var i=table.rows.length-1; i >= 0; i--){
+							table.deleteRow(i);
+							}
+					}
+					var newRow = table.insertRow(table.length);
+					for(var j = 0 ; j < tableColumn[0].length;j++){
+						var cell = newRow.insertCell(j);
+						cell.innerHTML = tableColumn[0][j];
+						}	
+						
+					}
+					for(var i = 0 ; i < queueLength;i++)
+					{
+
+						sqs.receiveMessage(params, function(err, data) {
+						if (err) console.log(err, err.stack);
+						else {
+								if(queueLength > 20)
+								{
+									var delete_length = queueLength - 20;
+										delparams = { QueueUrl: "https://sqs.us-east-1.amazonaws.com/750237606151/thatpithingqueue",
+											 ReceiptHandle: data.Messages[0].ReceiptHandle };
+											 queueLength--;
+								exit_function = 1;
+								}
+								else 
+									exit_function = 0;
+								if(!exit_function)
+								{
+									var evtdata = JSON.parse(data.Messages[0].Body);
+									console.log(evtdata);
+								
+									var is_Fareneit = $('input[name=temp]:checked').val();
+									var unit, temperature;
+									if (is_Fareneit == 1) 
+										evtdata.temperature = ((evtdata.temperature.toFixed(2) * 9.0)/5.0)+32;
+									var newRow;
+									var tableColumn = [[evtdata.timestamp,evtdata.temperature.toFixed(2),evtdata.humidity.toFixed(2)]];
+									table = document.getElementById("sqstable");
+									newRow = table.insertRow(table.length);
+									for(var j = 0 ; j < tableColumn[0].length;j++){
+										var cell = newRow.insertCell(j);
+										cell.innerHTML = tableColumn[0][j];
+										delparams = { QueueUrl: "https://sqs.us-east-1.amazonaws.com/750237606151/thatpithingqueue",
+											  ReceiptHandle: data.Messages[0].ReceiptHandle };
+									sqs.deleteMessage(delparams, function(err, data) {
+									if (err) console.log("Error in deleting");
+									else console.log("Message deleted");
+									
+								});
+								}
+							}
+						}
+					
+							});
+					}
+				table_flag = 1;
+
+				sqs.getQueueAttributes(params, function(err, data) {
+				if (err) console.log(err, err.stack);
+				else{
+				queueLength = JSON.parse(data.Attributes.ApproximateNumberOfMessages);
+				log(queueLength);
+				$("#sqslen").val(queueLength);
+				}
+				}); 
+				
+			}
+		});
+		
+       });
+		$("#getsqslen").click(function(evt){
+			var queueLength;
+			
+			var params = { QueueUrl: "https://sqs.us-east-1.amazonaws.com/750237606151/thatpithingqueue",
+						   AttributeNames: ['ApproximateNumberOfMessages']};
+			
+			sqs.getQueueAttributes(params, function(err, data) {
+			if (err) console.log(err, err.stack);
+			else{
+			queueLength = JSON.parse(data.Attributes.ApproximateNumberOfMessages);
+			
+			$("#sqslen").val(queueLength);
+			}
+			});
+		
+		});
+	});
+    </script>
+  <body>
+    <h1>EID: Project 03</h1>
+
+	<div id="SQS_val">
+		<button type="button" id="getsqsval" style="background:#9EBCB8;">Get SQS Value</button>&emsp;
+		<output id="time" style="background:#CFFAF4;"></output> 
+
+		<label for="temperature" style="background:#CFFAF4;"> &emsp; TEMPERATURE: </label> 
+		<output id="temperature" style="background:#CFFAF4;"></output>
+
+		<label for="humidity" style="background:#CFFAF4;"> &emsp; HUMIDITY: </label>
+		<output id="humidity" style="background:#CFFAF4;"></output><br/><br/>
+
+		<input type="radio" name="temp" value="0"/> C &emsp;
+		<input type="radio" name="temp" value="1"/> F <br/><br/>
+
+		<button type="button" id="getsqslen" style="background:#9EBCB8;">Get SQS Queue Length</button>&emsp;
+		<output id="sqslen" style="background:#CFFAF4;"></output><br/><br/><br/><br/>
+		
+		<button type="button" id="getsqsallval" style="background:#9EBCB8;">Get 20 SQS Values</button>&emsp;
+		
+		<br /><br /><br /><br />
+	</div>
+      
+    
+    <div id="SQS_Table">
+      
+	<table align="center" style="width:40%" id="sqstable">
+		<caption>Data from SQS </caption>
+	</table>
+
+    <br /><br /><br /><br /><br /><br /><br /><br /><br />
+    </div>
+    
+	<div id="terminal">
+		<h3> LOGS</h3>
+
+	</div>
+
+  </body>
+
+  </head>
+ 
+</html>
