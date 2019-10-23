@@ -40,6 +40,11 @@ The python app sends MQTT push to AWS IOT 3 types of messages- DATA, ALERT , ERR
          - The Queue length button gives the current queue length of the AWS SQS.
          - On Queue Message read the queue prints out Queue is empty if there is not element to read.
          - The Queue length autoupdates itself on Queue read be it either single value or whole queue.
+   
+   ## Project Issues
+   
+          - AWS SNS message notification is unreliable and can stop working sometimes.
+          - As QOS = 0, we would receive messages multiple times and there won't be any synchronization.
         
  ## References
  [1] https://docs.aws.amazon.com/iot/latest/developerguide/iot-gs.html AWS Starter Guide
