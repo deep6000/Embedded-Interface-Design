@@ -45,6 +45,7 @@ The python app sends MQTT push to AWS IOT 3 types of messages- DATA, ALERT , ERR
    
           - AWS SNS message notification is unreliable and can stop working sometimes.
           - As QOS = 0, we would receive messages multiple times and there won't be any synchronization.
+          - Can't Delete messages unless reading it, thus ading overhead
         
  ## References
  [1] https://docs.aws.amazon.com/iot/latest/developerguide/iot-gs.html AWS Starter Guide
