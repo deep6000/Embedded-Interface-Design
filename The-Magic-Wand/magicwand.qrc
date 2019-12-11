@@ -1,5 +1,5 @@
 <RCC>
-  <qresource prefix="CapturedImg">
-    <file>image.jpg</file>
+  <qresource prefix="camCap">
+    <file>photo.jpeg</file>
   </qresource>
 </RCC>
