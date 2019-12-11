@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 import sys
-from PyQt5 import QtWidgets
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMainWindow
+from PyQt5 import QtGui
 from PyQt5.uic import loadUi
 from picamera import PiCamera
 from time import sleep
@@ -23,6 +23,7 @@ import requests
 import json
 import threading
 import asyncio
+from PIL import Image
 
 chunk=4096
 RATE=44100
@@ -38,6 +39,7 @@ capture= "image.jpg" #name of the captured image file
 audio_file = "speech.mp3" #name of the output file to be played
 command_filename = 'identify.wav' # name of  command .wav file
 feedback_filename = 'feedback.wav' # name of feedback .wav file
+capture_display = "" # display for the identified object
 
 #voice commands and feedback
 identify_command = "identify"
@@ -58,32 +60,34 @@ wav_output_filename = 'test1.wav' # name of .wav file
 audio = pyaudio.PyAudio() # create pyaudio instantiation
 
 
-
-class Client(QtWidgets.QMainWindow):
+class Client(QMainWindow, QLabel):
 	camera = PiCamera()
 	
 	def __init__(self):
 		super().__init__()
 		loadUi('clientGUI.ui',self)
 		self.pushButton_close.clicked.connect(self.terminate)
+		self.pushButton_mic.clicked.connect(self.identifio)
+		self.pushButton_mic.setStyleSheet("background-color: red")
+		
 	"""
 	Initialize the display
 	"""
 	def main(self):
-		Client.camera.resolution = (640, 480)
+		self.camera.resolution = (640, 480)
 	"""
 	Capture the image
 	image is the file name of the image;
 	return object of the image
 	"""	
-	def capture_image(image ):
-		Client.camera.capture(image)
+	def capture_image(self, image ):
+		self.camera.capture(image)
 		return image
 	
 	"""
 	Upload the content to the specified bucket
 	"""		
-	def upload_to_bucket(content,bucket):
+	def upload_to_bucket(self, content,bucket):
 		S3 = boto3.client('s3')
 		S3.upload_file(content,bucket,content) 
 	
@@ -91,7 +95,8 @@ class Client(QtWidgets.QMainWindow):
 	Detect the labels for specified image in the specified bucket
 	returm the label with max confidence 
 	"""	
-	def detect_img_labels(image,bucket):
+	def detect_img_labels(self, image,bucket):
+		label = "Invalid"
 		confidence= 0
 		client=boto3.client('rekognition',region)
 		print("Recognizing")
@@ -115,7 +120,7 @@ class Client(QtWidgets.QMainWindow):
 	 Convert the text passed into a speech file specified 
 	"""	
 	
-	def text_to_speech(text,speech_file):
+	def text_to_speech(self, text,speech_file):
 		polly_client = boto3.client('polly',region)
 		try:
 			response = polly_client.synthesize_speech(VoiceId='Joanna',
@@ -131,7 +136,7 @@ class Client(QtWidgets.QMainWindow):
 	"""
 	record audio for given number of seconds 
 	"""	
-	def record_audio(wav_output_filename,record_secs):
+	def record_audio(self, wav_output_filename,record_secs):
 		# create pyaudio stream
 		stream = audio.open(format = form_1,rate = samp_rate,channels = chans, \
                     input_device_index = dev_index,input = True, \
@@ -163,7 +168,7 @@ class Client(QtWidgets.QMainWindow):
 	play audio for given input file
 	"""	
 		
-	def play_audio(input_file):
+	def play_audio(self, input_file):
 		mixer.music.load(audio_file)
 		mixer.music.play()
 		while mixer.music.get_busy() == True:
@@ -173,7 +178,7 @@ class Client(QtWidgets.QMainWindow):
 	"""
 	using lex bot to convert speech to text of given input wave file
 	"""	
-	def aws_lex(wavefile):
+	def aws_lex(self, wavefile):
 		
 		lex_run = boto3.client('lex-runtime', region_name = region)
 		wavefile = wave.open(wavefile)
@@ -186,7 +191,7 @@ class Client(QtWidgets.QMainWindow):
 		text_data = response['ResponseMetadata']['HTTPHeaders']['x-amz-lex-message']
 		return text_data
 	
-	def send_to_sqs(message):
+	def send_to_sqs(self, message):
 		sqs = boto3.client('sqs',region_name=region)
 		response_sqs = sqs.send_message(
         QueueUrl=myQueueUrl,
@@ -194,66 +199,68 @@ class Client(QtWidgets.QMainWindow):
         
 	def terminate(self):
 		sys.exit(app.exec_())
-        
-def record_callback():
-	asyncio.set_event_loop(asyncio.new_event_loop())
-	obj = Client()
-	obj.main()
-	
-	feedback_done = 0
-	count = 0
-	
-	while True:
+		
+	def identifio(self):
+		self.pushButton_mic.setStyleSheet("background-color: green")
+		global capture, label_img, capture_display
+		feedback_done = 0
+		count = 0
+		
 		print("Record AUDIO")
-		Client.record_audio(command_filename,3)
-		command = Client.aws_lex(command_filename)
+		self.record_audio(command_filename,3)
+		command = self.aws_lex(command_filename)
+		timestamp =  datetime.datetime.now().strftime("%H:%M:%S")
 		
 		if identify_command in command:
+			payload =  '{ "MessageType": "CmdRecog"' + '","timestamp": "' + timestamp + '","Feedback": "Right"  }'
+			self.send_to_sqs(json.dumps(payload))
 			mixer.init()
 			#Client.camera.start_preview()
 			#sleep(5)
-			capture = Client.capture_image(capture)
+			capture = self.capture_image(capture)
+			self.label_img.setPixmap(QtGui.QPixmap("image.jpg"))
 			
 			#Client.camera.stop_preview()
-			Client.upload_to_bucket(capture,bucket_image)
-			captured_label = Client.detect_img_labels(capture,bucket_image)
+			self.upload_to_bucket(capture,bucket_image)
+			
+			captured_label = self.detect_img_labels(capture,bucket_image)
 			print(captured_label)
 			
 			if captured_label is not None:
-				Client.text_to_speech(captured_label,audio_file)
-				Client.play_audio(audio_file)
+				capture_display = captured_label
+				self.label_recog.setText(captured_label)
+				self.text_to_speech(captured_label,audio_file)
+				self.play_audio(audio_file)
 			while feedback_done is 0 and count < 3:
 				print("Give Feedback")
-				Client.record_audio(feedback_filename,3)
-				command = Client.aws_lex(feedback_filename)
+				self.record_audio(feedback_filename,3)
+				command = self.aws_lex(feedback_filename)
 				print(command)
 				timestamp =  datetime.datetime.now().strftime("%H:%M:%S")
 				if right_feedback in command:
 					print("Rightly detected object")
 					feedback_done = 1
-					payload =  '{ "Label": "'+ captured_label + '","timestamp": "' + timestamp + '","Feedback": "Right"  }'
-					Client.send_to_sqs(payload)
+					payload =  '{ "MessageType": "ImgRecog", "Label": "'+ captured_label + '","timestamp": "' + timestamp + '","Feedback": "Right"  }'
+					self.send_to_sqs((payload))
 				elif wrong_feedback in command:
 					print("Wrongly Detected Object")
 					feedback_done = 1
-					payload =  '{ "Label": "'+ captured_label + '","timestamp": "' + timestamp + '","Feedback": "Wrong"  }'
-					Client.send_to_sqs(payload)
+					payload =  '{ "MessageType": "ImgRecog", "Label": "'+ captured_label + '","timestamp": "' + timestamp + '","Feedback": "Wrong"  }'
+					self.send_to_sqs(payload)
 				else:
 					feedback_done = 0
 					count = count + 1
 		else:
 			print("retry recording audio")
+			payload =  '{ "MessageType": "CmdRecog"' + '","timestamp": "' + timestamp + '","Feedback": "Wrong"  }'
+			self.send_to_sqs((payload))
+		
+		self.pushButton_mic.setStyleSheet("background-color: red")
 			
 		
-		
 if __name__ == '__main__':
-	app = QtWidgets.QApplication(sys.argv)
+	app = QApplication(sys.argv)
 	obj = Client()
-	
-	x = threading.Thread(target = record_callback)
-	x.start()
 	obj.show()
 	obj.terminate()
-	x.join()
-	sys.exit(app.exec_())
 		
