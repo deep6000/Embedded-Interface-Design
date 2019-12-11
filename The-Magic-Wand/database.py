@@ -6,7 +6,7 @@ import datetime
 DB_HOSTNAME = 'localhost'
 DB_USERNAME = 'root'
 DB_PASSWORD = 'mdp6kor'
-DB_NAME     = 'Magic_Wand'
+DB_NAME     = 'DHT_22'
 TB_COMMAND  = 'Command_Table'
 TB_LABEL    = 'Label_Table'
 

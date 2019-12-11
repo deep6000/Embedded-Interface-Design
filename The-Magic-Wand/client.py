@@ -13,7 +13,6 @@ from botocore.exceptions import BotoCoreError, ClientError
 from tempfile import gettempdir
 from contextlib import closing
 import subprocess
-import os
 from pygame import mixer
 import pyaudio
 import wave
@@ -21,9 +20,13 @@ import boto3
 from time import sleep
 import requests
 import json
-import threading
-import asyncio
-from PIL import Image
+
+
+_author__ = "Madhumitha Tolakanhalli , Deepesh Sonigra"
+__copyright__ = "Copyright 2019, Magic Wand"
+__email__ = "mato2277@colorado.edu , deso6761@colorado.edu"
+__version__ = 1.0
+__status__ = "Prototype"
 
 chunk=4096
 RATE=44100
