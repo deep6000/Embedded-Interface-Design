@@ -58,7 +58,8 @@ class db_sql():
 		cursor.execute(command)
 		readings = cursor.fetchall()
 		for row in readings:
-			if row [2] == "Recognized":
+			print(row[2])
+			if row [2] == "Right":
 				recognized = recognized + 1
 			total = total + 1
 		if  total == 0:

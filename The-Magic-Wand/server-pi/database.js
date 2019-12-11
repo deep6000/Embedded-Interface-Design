@@ -13,13 +13,12 @@ var params = {
  AttributeNames: [
     "SentTimestamp"
  ],
- MaxNumberOfMessages: 1,
+ MaxNumberOfMessages: 10,
  MessageAttributeNames: [
     "All"
  ],
  QueueUrl: queueURL,
  VisibilityTimeout: 1,
- WaitTimeSeconds: 0
 };
 
 
@@ -130,11 +129,50 @@ function get_last_n_records(tb_name,n)
 }
 
 
+function receive_from_Queue()
+{
+	sqs.receiveMessage(params, function(err, data) {
+				console.log("IN SQS");
+				var evtdata;
+				var evt;
+				var error_status = 0;
+				if (err) console.log(err, err.stack);
+				else if(data.Messages)
+				{
+					var length = data.Messages.length;
+					if(length === 0);
+					//console.log("Queue Empty");
+					else{
+						console.log(data.Messages[0].Body);
+						evt =JSON.parse(data.Messages[0].Body); 
+						evtdata= JSON.parse(evt);
+						if(error_status === 0)
+						{
+							// delete the parameter from the Queue
+						var deleteParams = { QueueUrl:queueURL, ReceiptHandle: data.Messages[0].ReceiptHandle };
+						sqs.deleteMessage(deleteParams, function(err, data) {
+						if (err) {
+							console.log("Delete Error", err);
+								}
+						else 
+							console.log("Message Deleted", data);
+							});}
+						if(evtdata.MessageType === "ImgRecog")
+							insert_label_table(evtdata.timestamp,evtdata.Label,evtdata.Feedback)
+								
+						else if(evtdata.MessageType === "CmdRecog")
+							insert_command_table(evtdata.timestamp,evtdata.Feedback)	
+						}
+					}
+				});
+}
+	
+	
 
 var con = mysql.createConnection({
     host: "localhost",
     user: "pi",
-    password:  "mdp6kor"
+    password:"mdp6kor"
 });
 
 
@@ -148,47 +186,8 @@ create_database(database);
 use_database(database);
 create_command_table(command_tb);
 create_label_table(label_tb);
-//insert_command_table();
-//insert_label_table(1,label,feedback);
+setInterval(receive_from_Queue,1000);
 
-while(1)
-{
-	sqs.receiveMessage(params, function(err, data) {
-				console.log("IN SQS");
-				var evtdata;
-				if (err) console.log(err, err.stack);
-				else if(data.Messages)
-				{
-				
-						var length = data.Messages.length;
-						if(length === 0);
-							//console.log("Queue Empty");
-							
-						else{
-							//console.log("Data Received");
-							evtdata = JSON.parse(JSON.parse(data.Messages[0].Body)); 
-							
-
-							// delete the parameter from the Queue
-							/**var delparams = { QueueUrl:queueURL, ReceiptHandle: data.Messages[0].ReceiptHandle };
-							 sqs.deleteMessage(deleteParams, function(err, data) {
-								if (err) {
-									console.log("Delete Error", err);
-								} else {
-									console.log("Message Deleted", data);
-      }
-    });*/
-							if(evtdata.MessageType === "ImgRecog")
-								insert_label_table(evtdata.timestamp,evtdata.Label,evtdata.Feedback)
-								
-							else if(evtdata.MessageType === "CmdRecog")
-								insert_command_table(evtdata.timestamp.toString,evtdata.Feedback.toString)	
-						}
-					}
-				
-				});
-			}
-			
 con.on('close', function(reasonCode, description) {
 
 console.log('Client has disconnected.');
